@@ -1,0 +1,36 @@
+name: Daily Heartbeat Commit
+
+on:
+  schedule:
+    # Runs once daily at 05:17 UTC (GitHub cron uses UTC; adjust if you like)
+    - cron: '17 5 * * *'
+  workflow_dispatch: {}  # lets you run it manually for testing
+
+permissions:
+  contents: write  # required to push commits
+
+concurrency:
+  group: daily-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Step name includes your email, as required
+      - name: Heartbeat by 21f3001142@ds.study.iitm.ac.in
+        run: |
+          set -e
+          git config user.name "DevSync Bot"
+          git config user.email "21f3001142@ds.study.iitm.ac.in"
+
+          mkdir -p .devsync
+          # Update a timestamp so there is always a real change
+          printf "last_run_utc: %s\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > .devsync/daily_heartbeat.txt
+
+          git add .devsync/daily_heartbeat.txt
+          git commit -m "chore(heartbeat): daily update $(date -u +"%Y-%m-%d")"
+          git push
